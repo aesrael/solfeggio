@@ -9,18 +9,22 @@
         font-family: Arial, sans-serif;
         background-color: #f5f5f5;
         margin: 0;
-
-        flex-direction: column;
         height: 100vh;
       }
 
       /* center the main section in the page */
+      section {
+        display: flex;
+        justify-content: center;
+        height: 100%;
+      }
+
       .main {
+        width: 50%;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        flex-grow: 1;
+        justify-content: flex-start;
+        align-items: flex-start;
       }
 
       header {
@@ -38,12 +42,12 @@
 
       div {
         margin-bottom: 15px;
-        text-align: center;
       }
 
       label {
+        margin: 10px 0 5px 0;
         display: block;
-        margin-bottom: 5px;
+        color: #333;
       }
 
       input {
@@ -72,6 +76,66 @@
       #restartBtn:hover {
         background-color: #d32f2f;
       }
+
+      #notesCheckboxes {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 0;
+        margin: 10px 0;
+      }
+
+      #notesCheckboxes input {
+        margin: 0;
+        margin-right: 5px;
+      }
+
+      #notesCheckboxes label {
+        margin: 0;
+        margin-right: 20px;
+      }
+
+      .flex {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .notes {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        width: 30vw;
+      }
+
+      .notesBox {
+        margin-top: 15px;
+      }
+
+      .notesBox div {
+        margin-bottom: 15px;
+      }
+
+      .notesBox strong {
+        color: #666;
+      }
+
+      .notesBox ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      .notesBox ul li {
+        margin-bottom: 5px;
+      }
+
+      .showNotes {
+        display: flex;
+        align-items: center;
+      }
     </style>
     <script src="http://unpkg.com/tone"></script>
     <script src="https://cdn.jsdelivr.net/npm/tonal/browser/tonal.min.js"></script>
@@ -81,98 +145,219 @@
       <h1>Solfeggio</h1>
     </header>
 
-    <section class="main">
-      <div>
-        <label for="notesInput">Notes:</label>
-        <input
-          type="text"
-          value="C, E, G"
-          id="notesInput"
-          placeholder="Enter notes"
-        />
-      </div>
+    <section>
+      <div class="main">
+        <div class="notesInput">
+          <label for="notesInput"
+            >Notes to generate random combinations of:</label
+          >
+          <div id="notesCheckboxes">
+            <input type="checkbox" id="do" name="note" value="do" checked />
+            <label for="do">Do</label><br />
 
-      <div>
-        <label for="notesCombination">Note Combinations:</label>
-        <input
-          type="number"
-          value="2"
-          id="notesCombination"
-          placeholder="How many note combinations"
-        />
-      </div>
+            <input type="checkbox" id="re" name="note" value="re" />
+            <label for="re">Re</label><br />
 
-      <div>
-        <label for="transposeCountInput">Transpose Count:</label>
-        <input
-          type="number"
-          value="2"
-          id="transposeCountInput"
-          placeholder="Enter transpose count"
-        />
-      </div>
+            <input type="checkbox" id="mi" name="note" value="mi" checked />
+            <label for="mi">Mi</label><br />
 
-      <input type="hidden" id="pause" value="" />
-      <button id="playBtn" onclick="startTraining()">Start Training</button>
-      <button id="restartBtn" onclick="window.location.reload()">
-        Restart
-      </button>
+            <input type="checkbox" id="fa" name="note" value="fa" />
+            <label for="fa">Fa</label><br />
+
+            <input type="checkbox" id="sol" name="note" value="sol" checked />
+            <label for="sol">Sol</label><br />
+
+            <input type="checkbox" id="la" name="note" value="la" d />
+            <label for="la">La</label><br />
+
+            <input type="checkbox" id="ti" name="note" value="ti" />
+            <label for="ti">Ti</label><br />
+          </div>
+        </div>
+
+        <div>
+          <label for="notesCombination"> How many notes combinations: </label>
+          <input type="number" value="3" id="notesCombination" />
+        </div>
+
+        <div>
+          <label for="replayTimes">
+            No of times to play (in random keys) the solfege sequence:
+          </label>
+          <input type="number" value="2" id="replayTimes" />
+        </div>
+
+        <div class="flex">
+          <button id="startBtn" onclick="startTraining()">
+            Start Training
+          </button>
+          <button id="restartBtn" onclick="window.location.reload()">
+            Restart
+          </button>
+        </div>
+
+        <div class="notes">
+          <!-- radio button that determines if to show current notes or not -->
+          <div class="showNotes">
+            Show currently playing notes
+            <input type="checkbox" id="showNotes" onchange="toggleNotesBox()" />
+          </div>
+
+          <!-- box that shows the original notes, transposed notes & the solfege -->
+          <div class="notesBox" id="notesBox" hidden="true">
+            <div>
+              <strong>Notes:</strong>
+              <ul id="notesPlaying"></ul>
+            </div>
+
+            <div>
+              <strong>Correct Solfege:</strong>
+              <ul id="solfege"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-    <script>
-      document.getElementById('playBtn').addEventListener('click', () => {
-        const paused = document.getElementById('pause')
-        const trainingButton = document.getElementById('playBtn')
 
-        if (paused.value === '') {
-          paused.value = 'false'
-          trainingButton.textContent = 'pause'
-        } else if (paused.value !== 'true') {
-          paused.value = 'true'
-          trainingButton.textContent = 'Resume'
+    <!-- page rendering -->
+    <script>
+      function toggleNotesBox() {
+        const notesBox = document.getElementById('notesBox')
+        const showNotesChecked = document.getElementById('showNotes').checked
+
+        if (showNotesChecked) {
+          notesBox.hidden = false
         } else {
-          paused.value = 'false'
-          trainingButton.textContent = 'Pause'
+          notesBox.hidden = true
         }
-      })
+      }
+
+      const solfegeList = document.getElementById('solfege')
+      const notesPlaying = document.getElementById('notesPlaying')
+
+      function fillNotesPlaying(notes) {
+        createListItem(notes, notesPlaying)
+      }
+      function fillSolfege(notes) {
+        createListItem(notes, solfegeList)
+      }
+
+      function clearNotesDisplay() {
+        notesPlaying.innerHTML = ''
+        solfegeList.innerHTML = ''
+      }
+
+      function createListItem(note, listElement) {
+        const li = document.createElement('li')
+        li.style.listStyle = 'inside'
+        li.textContent = note
+        listElement.appendChild(li)
+      }
     </script>
 
     <!-- utils -->
     <script>
       const solfegePhonetic = {
-        C: 'doh',
+        C: 'do',
         // 'C#': 'di',
-        D: 'ray',
+        D: 're',
         // 'D#': 'ri',
-        E: 'mee',
-        F: 'fah',
+        E: 'mi',
+        F: 'fa',
         // 'F#': 'fi',
-        G: 'soh',
+        G: 'sol',
         // 'G#': 'si',
-        A: 'lah',
+        A: 'la',
         // 'A#': 'li',
-        B: 'tee',
+        B: 'ti',
       }
 
-      const solfeges = Object.values(solfegePhonetic)
+      const solfegeToNote = Object.fromEntries(
+        Object.entries(solfegePhonetic).map(([key, value]) => [value, key]),
+      )
 
+      const solfeges = Object.values(solfegePhonetic)
+      const solfegeNotes = Object.keys(solfegePhonetic)
+      const chromaticScale = [
+        'C',
+        'C#',
+        'D',
+        'D#',
+        'E',
+        'F',
+        'F#',
+        'G',
+        'G#',
+        'A',
+        'A#',
+        'B',
+      ]
       /**
        * @param {number} x
        * @param {number} y
        *
        * @returns {number}
        */
-      function getNoBetweenXAndY(x = 3, y = 6) {
+      function getNoBetweenXAndY(x, y) {
         return Math.floor(Math.random() * (y - x + 1) + x)
       }
 
       /**
+       * @param {[string]} solfaNotes
        * @param {[string]} notes
-       * @param {number} pos
+       * @param {number} pitchPos e.g 4 -> as in C4 for middle C
+       *
+       * @description Get the pitch of the notes e.g FAC -> F4, A5, C5
+       * Code can be improved, but this will do.
        *
        * @returns {[string]}
        */
-      function getNotesPitch(notes, pos = getNoBetweenXAndY()) {
-        return notes.map((note) => note + pos)
+      function getNotesPitch(
+        notes,
+        pitchPos = getNoBetweenXAndY(4, 6),
+        keepSamePitch = false,
+      ) {
+        if (keepSamePitch) {
+          return notes.map((note) => note + pitchPos)
+        }
+        // create a scale that spans 2 octaves
+        const newChromaticScale = []
+        for (let octave = pitchPos; octave <= pitchPos + 1; octave++) {
+          for (const note of chromaticScale) {
+            newChromaticScale.push(`${note}${octave}`)
+          }
+        }
+
+        // set the root note e.g F as F4, now for each note in the notes array starting from i + 1.
+        // get the index of the note i + 1 that is the closest to the note i in the new chromatic scale
+        // for example FAC, we have F4, A5, C5 because A5 is the closest to F4 than A4 and C5 is the closest to A5 than C4
+
+        const rootNote = notes[0]
+        const notesPitch = [rootNote + pitchPos]
+        for (let i = 1; i < notes.length; i++) {
+          const note = notes[i]
+          const indexOfNoteInRootNoteOctave = newChromaticScale.indexOf(
+            note + pitchPos,
+          )
+          const indexOfNoteInNextOctave = newChromaticScale.indexOf(
+            note + (pitchPos + 1),
+          )
+
+          const lastNoteIndex = newChromaticScale.indexOf(
+            notesPitch[notesPitch.length - 1],
+          )
+
+          if (
+            Math.abs(indexOfNoteInRootNoteOctave - lastNoteIndex) <=
+            Math.abs(indexOfNoteInNextOctave - lastNoteIndex)
+          ) {
+            notesPitch.push(note + pitchPos)
+          } else {
+            notesPitch.push(note + (pitchPos + 1))
+          }
+        }
+
+        return notesPitch
       }
 
       /**
@@ -184,20 +369,13 @@
         return Tonal.Chord.get(rootNote).notes
       }
 
-      /**
-       * @param {String} notes
-       * @param {String} key
-       * @description Given a note, get the moveable do solfege.
-       * e.g in the key of A, the solfege of A is DO, B is RE, C# is MI, etc
-       *
-       * @returns {[String]}
-       */
-      function getMoveableDo(note, key) {
-        const scale = Tonal.Scale.get(rootNote + ' major').notes
-        const rootNoteIndex = scale.indexOf(rootNote)
+      function notesFromSolfege(solfaNotes, key = 'C') {
+        const scale = Tonal.Scale.get(key + ' major').notes
 
-        const noteIndex = scale.indexOf(note)
-        return solfeges[noteIndex]
+        return solfaNotes.map((solfaNote) => {
+          const solfaIndex = solfeges.indexOf(solfaNote)
+          return scale[solfaIndex]
+        })
       }
 
       /**
@@ -207,8 +385,9 @@
        *
        * @returns {void}
        */
-      async function playNotes(notes, duration = '8n') {
+      async function playNotes(notes, duration = '4n') {
         const synth = new Tone.Synth().toDestination()
+
         for (const note of notes) {
           await sleep(500)
           synth.triggerAttackRelease(note, duration)
@@ -232,32 +411,31 @@
        *
        * @returns {[string]}
        */
-      function transposeNotes(
-        notes,
-        transposeInterval = Math.floor(Math.random() * 12) + 1,
-      ) {
-        return notes.map((note) =>
+      function transposeNotes(notes, transposeInterval) {
+        const n = notes.map((note) =>
           Tonal.Note.transpose(note, transposeInterval),
         )
+        return n
       }
 
+      function say(message) {
+        const utterance = new SpeechSynthesisUtterance(message)
+        speechSynthesis.speak(utterance)
+      }
       /**
-       * @param {[string]} notes
+       * @param {[string]} solfaNotes
        * @param {string} pitch
        *
        * @returns {void}
        */
-      function pronounceNotesWithPitch(notes, pitch) {
-        notes.forEach(async (note, index) => {
+      async function pronounceNotesWithPitch(solfaNotes, pitch) {
+        for (const [index, solfa] of solfaNotes.entries()) {
           const synth = new Tone.Synth().toDestination()
-          synth.triggerAttackRelease(pitch[index], '2n')
 
-          const utterance = new SpeechSynthesisUtterance(
-            getMoveableDo(note, notes[0]),
-          )
-          window.speechSynthesis.speak(utterance)
-          await sleep(1000)
-        })
+          synth.triggerAttackRelease(pitch[index], '2n')
+          say(solfa)
+          await sleep(600)
+        }
       }
 
       /**
@@ -265,6 +443,23 @@
        */
       function sleep(ms = 1000) {
         return new Promise((resolve) => setTimeout(resolve, ms))
+      }
+
+      /**
+       * @param {string} key
+       * @returns {string}
+       */
+      function getKeyName(key) {
+        const keyName = key[0]
+        const accidental = key[1]
+
+        if (accidental === '#') {
+          say(keyName + ' sharp')
+        } else if (accidental === 'b') {
+          return keyName + ' flat'
+        } else {
+          return keyName
+        }
       }
     </script>
 
@@ -282,8 +477,10 @@
         allCombinations = [],
       ) {
         if (length === 0) {
-          // Base case: when the desired length is reached, add the current combination to the result
-          allCombinations.push([...currentCombination])
+          // we dont want all same notes combinations
+          if (new Set(currentCombination).size > 1) {
+            allCombinations.push([...currentCombination])
+          }
           return
         }
 
@@ -306,15 +503,18 @@
       /**
        * @param {[[string]]} note list
        * @param {[string]} chordNotes
-       * @param {[string]} originalNotes
-       *
+       * @param {[string]} notes
+       * @param {string} key
        * @return {[[string]]}
        */
-      function createTuneList(list, chordNotes, originalNotes, pitch) {
+      function createTuneList(list, chordNotes, notes, key) {
         list.push(
-          playChord.bind(null, getNotesPitch(chordNotes, pitch)),
+          fillNotesPlaying.bind(null, `${notes.join(', ')} (${key} key) `),
+          say.bind(null, 'Key of ' + getKeyName(key)),
           sleep,
-          playNotes.bind(null, getNotesPitch(originalNotes, pitch)),
+          playChord.bind(null, chordNotes),
+          sleep,
+          playNotes.bind(null, notes),
           sleep,
         )
         return list
@@ -322,36 +522,60 @@
 
       /**
        * @param {[[string]]} allNoteCombinations
-       * @param {number} transposeCount
+       * @param {number} replayTimes
        *
        * @returns {[[Function]]}
        */
-      function buildTrainingNotes(allNoteCombinations, transposeCount) {
+      function buildTrainingNotes(allNoteCombinations, replayTimes) {
         const MIDDLE_PITCH = 4
+        const C = 'C'
 
         const trainingNotes = []
-        for (const notes of allNoteCombinations) {
-          const list = []
-          // push tonic and notes to list
-          const originalNotes = [...notes]
-          const chordNotes = getNoteChord(originalNotes[0])
-          createTuneList(list, chordNotes, originalNotes, MIDDLE_PITCH)
 
-          // transpose the original notes 'transposeCount' times, and add it to the list
-          for (let i = 0; i < transposeCount; i++) {
-            const transposedNotes = transposeNotes(originalNotes)
+        for (const solfaNotes of allNoteCombinations) {
+          const list = [fillSolfege.bind(null, solfaNotes.join(' '))]
+
+          // start from  middle C, map to the solfege, then transpose to a random key replayTimes - 1 times
+          const originalNotes = notesFromSolfege(solfaNotes, C)
+          const chordNotesPitch = getNotesPitch(
+            getNoteChord(originalNotes[0]),
+            MIDDLE_PITCH,
+            true,
+          )
+
+          const originalNotesPitch = getNotesPitch(
+            originalNotes,
+            MIDDLE_PITCH,
+            true,
+          )
+          createTuneList(list, chordNotesPitch, originalNotesPitch, C)
+
+          // transpose the notes replayTimes - 1 times
+          for (let i = 0; i < replayTimes - 1; i++) {
+            const transposeInterval = Tonal.Interval.fromSemitones(
+              Math.floor(Math.random() * 12) + 1,
+            )
+            const key = Tonal.Note.transpose(C, transposeInterval)
+            const transposedNotes = transposeNotes(
+              originalNotes,
+              transposeInterval,
+            )
             const transposedChordNotes = getNoteChord(transposedNotes[0])
-            createTuneList(list, transposedChordNotes, transposedNotes)
+
+            const pitch = getNoBetweenXAndY(4, 6)
+            createTuneList(
+              list,
+              getNotesPitch(transposedChordNotes, pitch),
+              getNotesPitch(transposedNotes, pitch),
+              key,
+            )
           }
 
           // read out original notes, so the user can check they got it right
           list.push(
             sleep.bind(null, 5000),
-            pronounceNotesWithPitch.bind(
-              null,
-              originalNotes,
-              getNotesPitch(originalNotes, MIDDLE_PITCH),
-            ),
+            pronounceNotesWithPitch.bind(null, solfaNotes, originalNotesPitch),
+            sleep.bind(null, 3000),
           )
           trainingNotes.push(list)
         }
@@ -365,33 +589,31 @@
        * after that the original notes are read out, to check if the user can recognize the notes
        */
       function startTraining() {
-        const notesInput = document.getElementById('notesInput')
+        // disable the start button
+        document.getElementById('startBtn').disabled = 'true'
+        const solfegeInput = document.getElementById('notesCheckboxes')
 
         const notesCombination =
           document.getElementById('notesCombination').value
 
-        const transposeCountInput = document.getElementById(
-          'transposeCountInput',
-        ).value
-
-        const notes = notesInput.value
-          .split(',')
-          .map((note) => note.trim().toUpperCase())
-          .filter((note) => note >= 'A' && note <= 'G')
-
-        notesInput.value = notes.join(', ')
+        const replayTimes = document.getElementById('replayTimes').value
+        // get checked
+        const notes = Array.from(solfegeInput.querySelectorAll('input'))
+          .filter((input) => input.checked)
+          .map((input) => input.value)
 
         // generate all the note combinations
         const allNoteCombinations = generateAllNoteCombinations(
           notes,
           parseInt(notesCombination),
         )
+
+        // const allNoteCombinations = [['do', 'mi', 'sol']]
         // build the training notes
         const trainingNotes = buildTrainingNotes(
           allNoteCombinations,
-          parseInt(transposeCountInput),
+          parseInt(replayTimes),
         )
-
         // free memory
         allNoteCombinations.length = 0
         playTrainingNotes(trainingNotes)
@@ -407,24 +629,21 @@
         // make sure not to choose the same tune twice in a row
         let set = new Set()
         while (true) {
-          // simulate a pause
-          if (document.getElementById('pause').value === 'true') {
-            await sleep(1000)
-            continue
-          }
-
+          clearNotesDisplay()
           const tunePos = Math.floor(Math.random() * trainingNotes.length)
           if (set.has(tunePos)) {
             continue
           }
           set.add(tunePos)
+
+          for (const action of trainingNotes[tunePos]) await action()
+
           if (set.size === trainingNotes.length) {
             trainingNotes.length = 0
             alert("You've completed the training, you can go again if you want")
+            document.getElementById('startBtn').disabled = false
             return
           }
-
-          for (const action of trainingNotes[tunePos]) await action()
         }
       }
     </script>
