@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solfeggio Training</title>
+    <!-- add favicon via web link -->
+    <!-- <link rel="icon" type="image/png" href="" /> -->
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -57,7 +58,7 @@
 
       button {
         padding: 10px;
-        background-color: #4caf50;
+        background-color: #4169e1;
         color: white;
         border: none;
         border-radius: 5px;
@@ -66,15 +67,15 @@
       }
 
       button:hover {
-        background-color: #45a049;
+        background-color: #4b6dd4;
       }
 
       #restartBtn {
-        background-color: #f44336;
+        background-color: #333;
       }
 
       #restartBtn:hover {
-        background-color: #d32f2f;
+        background-color: #424040;
       }
 
       #notesCheckboxes {
@@ -136,8 +137,12 @@
         display: flex;
         align-items: center;
       }
+
+      .showNotes span {
+        margin-right: 5px;
+      }
     </style>
-    <script src="http://unpkg.com/tone"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77"></script>
     <script src="https://cdn.jsdelivr.net/npm/tonal/browser/tonal.min.js"></script>
   </head>
   <body>
@@ -199,7 +204,7 @@
         <div class="notes">
           <!-- radio button that determines if to show current notes or not -->
           <div class="showNotes">
-            Show currently playing notes
+            <span>Show currently playing notes</span>
             <input type="checkbox" id="showNotes" onchange="toggleNotesBox()" />
           </div>
 
@@ -312,11 +317,7 @@
        *
        * @returns {[string]}
        */
-      function getNotesPitch(
-        notes,
-        pitchPos = getNoBetweenXAndY(4, 6),
-        keepSamePitch = false,
-      ) {
+      function getNotesPitch(notes, pitchPos, keepSamePitch = false) {
         if (keepSamePitch) {
           return notes.map((note) => note + pitchPos)
         }
@@ -562,7 +563,7 @@
             )
             const transposedChordNotes = getNoteChord(transposedNotes[0])
 
-            const pitch = getNoBetweenXAndY(4, 6)
+            const pitch = getNoBetweenXAndY(3, 5)
             createTuneList(
               list,
               getNotesPitch(transposedChordNotes, pitch),
